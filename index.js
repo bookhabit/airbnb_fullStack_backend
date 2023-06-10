@@ -116,7 +116,7 @@ app.post('/places',(req,res)=>{
     const placeDoc = await Place.create({
       owner:userData.id,
       title,address,photos:addedPhotos,description,
-      perks,extraInfo,checkIn,checkOut,maxGuests
+      perks,extraInfo,checkIn,checkOut,maxGuests,price
     })
     res.json({placeDoc,addedPhotos})
   });
@@ -136,7 +136,7 @@ app.put('/places',async (req,res)=>{
     if(userData.id===placeDoc.owner.toString()){
       placeDoc.set({
         title,address,photos:addedPhotos,description,
-        perks,extraInfo,checkIn,checkOut,maxGuests
+        perks,extraInfo,checkIn,checkOut,maxGuests,price
       })
       await placeDoc.save();
       res.json('ok')
@@ -144,7 +144,7 @@ app.put('/places',async (req,res)=>{
   });  
 })
 
-// 로그인 유저가 등록한 숙소리스트
+// 로그인 유저가 등록한 숙소리스트 찾기
 app.get('/user-places', (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
   const {token} = req.cookies;
@@ -161,5 +161,10 @@ app.get('/places/:id',async (req,res)=>{
   res.json(await Place.findById(id))
 })
 
+// 메인페이지 숙소리스트 전체 찾기
+app.get('/places',async (req,res)=>{
+  mongoose.connect(process.env.MONGO_URL);
+  res.json(await Place.find()) 
+})
 
 app.listen(4000)
