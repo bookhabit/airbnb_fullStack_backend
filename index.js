@@ -121,6 +121,28 @@ app.post('/places',(req,res)=>{
   });
 })
 
+// 숙소 수정
+app.put('/places',async (req,res)=>{
+  mongoose.connect(process.env.MONGO_URL);
+  const {token} = req.cookies;
+  const {id,
+    title,address,addedPhotos,description,
+    perks,extraInfo,checkIn,checkOut,maxGuests
+  }=req.body;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if(err) throw err;
+    const placeDoc = await Place.findById(id)
+    if(userData.id===placeDoc.owner.toString()){
+      placeDoc.set({
+        title,address,addedPhotos,description,
+        perks,extraInfo,checkIn,checkOut,maxGuests
+      })
+      await placeDoc.save();
+      res.json('ok')
+    }
+  });  
+})
+
 // 로그인 유저가 등록한 숙소리스트
 app.get('/user-places', (req,res) => {
   mongoose.connect(process.env.MONGO_URL);
@@ -137,5 +159,6 @@ app.get('/places/:id',async (req,res)=>{
   const {id} = req.params;
   res.json(await Place.findById(id))
 })
+
 
 app.listen(4000)
