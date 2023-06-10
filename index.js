@@ -121,4 +121,21 @@ app.post('/places',(req,res)=>{
   });
 })
 
+// 로그인 유저가 등록한 숙소리스트
+app.get('/user-places', (req,res) => {
+  mongoose.connect(process.env.MONGO_URL);
+  const {token} = req.cookies;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    const {id} = userData;
+    res.json( await Place.find({owner:id}) );
+  });
+});
+
+// id값으로 숙소 찾기
+app.get('/places/:id',async (req,res)=>{
+  mongoose.connect(process.env.MONGO_URL);
+  const {id} = req.params;
+  res.json(await Place.findById(id))
+})
+
 app.listen(4000)
