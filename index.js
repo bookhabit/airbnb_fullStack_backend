@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const User = require('./models/User.js');
+const Place = require('./models/Place.js')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
@@ -76,16 +77,18 @@ app.post('/logout',(req,res)=>{
     res.cookie('token','').json(true);
 })
 
+// input string(이미지주소)으로 이미지업로드
 app.post('/upload-by-link',async(req,res)=>{
     const {link} = req.body;
     const newName = 'photo'+ Date.now() + '.jpg'
     await imageDownloader.image({
       url:link,
-      dest:__dirname+'/uploads'+newName,
+      dest:__dirname+'/uploads/'+newName,
     })
     res.json(newName)
 })
 
+// input file로 파일업로드
 const photosMiddleware = multer({dest:'uploads/'})
 app.post('/upload',photosMiddleware.array('photos',100),(req,res)=>{
   const uploadFiles = [];
@@ -98,6 +101,24 @@ app.post('/upload',photosMiddleware.array('photos',100),(req,res)=>{
     uploadFiles.push(newPath.replace('uploads/',''));
   }
   res.json(uploadFiles);
+})
+
+// 숙소 등록
+app.post('/places',(req,res)=>{
+  mongoose.connect(process.env.MONGO_URL);
+  const {token} = req.cookies;
+  const {title,address,addedPhotos,description,
+    perks,extraInfo,checkIn,checkOut,maxGuests
+  } = req.body;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) throw err;
+    const placeDoc = await Place.create({
+      owner:userData.id,
+      title,address,addedPhotos,description,
+      perks,extraInfo,checkIn,checkOut,maxGuests
+    })
+    res.json(placeDoc)
+  });
 })
 
 app.listen(4000)
