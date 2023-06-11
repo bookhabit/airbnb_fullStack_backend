@@ -3,6 +3,7 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const User = require('./models/User.js');
 const Place = require('./models/Place.js')
+const Booking = require('./models/Booking.js')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
@@ -108,7 +109,7 @@ app.post('/places',(req,res)=>{
   mongoose.connect(process.env.MONGO_URL);
   const {token} = req.cookies;
   const {title,address,addedPhotos,description,
-    perks,extraInfo,checkIn,checkOut,maxGuests
+    perks,extraInfo,checkIn,checkOut,maxGuests,price
   } = req.body;
   console.log(addedPhotos)
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
@@ -128,7 +129,7 @@ app.put('/places',async (req,res)=>{
   const {token} = req.cookies;
   const {id,
     title,address,addedPhotos,description,
-    perks,extraInfo,checkIn,checkOut,maxGuests
+    perks,extraInfo,checkIn,checkOut,maxGuests,price
   }=req.body;
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     if(err) throw err;
@@ -166,5 +167,19 @@ app.get('/places',async (req,res)=>{
   mongoose.connect(process.env.MONGO_URL);
   res.json(await Place.find()) 
 })
+
+app.post('/bookings', async (req, res) => {
+  mongoose.connect(process.env.MONGO_URL);
+  const {
+    place,checkIn,checkOut,numberOfGuests,name,phone,price,
+  } = req.body;
+  Booking.create({
+    place,checkIn,checkOut,numberOfGuests,name,phone,price,
+  }).then((doc) => {
+    res.json(doc);
+  }).catch((err) => {
+    throw err;
+  });
+});
 
 app.listen(4000)
